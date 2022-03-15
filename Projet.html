@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Urgentes Urgences !</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <!--///////////////////////////// B O D Y ////////////////////////////////*/-->
+    <div class="row">
+        <div class="col-6">
+            <h2>TODO-LIST</h2>
+            <div class="input-group mb-3">
+                <input type="text" maxlength="4" class="form-control" placeholder="Tâche à ajouter">
+                <button class="btn btn-outline-secondary" onclick="lister()" type="button"
+                    id="button-addon2">Ajouter</button>
+                <button onclick="getListe(listeObjetTache)">getTacheServer</button>
+                <button onclick="listeTacheOnConsole(listeObjetTache)">consoleLogTache</button>
+                <button onclick="lister(listeObjetTache)">affichage</button>
+            </div>
+        </div>
+
+        <div class="col-6">
+            <h2>Modifier une tâche</h2>
+            <div class="col-6 col-md-4">
+                <div class="card text-white bg-danger mb-3" style="max-width: 18rem;">
+                    <div class="card-header"><input class="form-control" placeholder="Titre de la tâche"></input> </div>
+                    <div class="card-body">
+                        <h5 class="card-title"><input class="form-control" placeholder="Nom de la tâche"></input></h5>
+                        <div class="mb-3">
+                            <textarea placeholder="Description" class="form-control" id="description"
+                                rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Columns start at 50% wide on mobile and bump up to 33.3% wide on desktop -->
+    <div class="row">
+        <div class="col-6">
+            <h2>TO-DO</h2>
+            <hr>
+            <div class="col-6" id="TacheAFaire"></div>
+        </div>
+
+        <div class="col-6">
+            <h2>NOT-TO-DO</h2>
+            <hr>
+            <div class="col-6" id="TacheFaite"></div>
+        </div>
+    </div>
+    <!--///////////////////////////// B O D Y ////////////////////////////////*/-->
+    <!--/////////////////////////// S C R I P T //////////////////////////////*/-->
+    <script>
+        /*-------------CLASS------------*/
+        class Tache {
+            id;
+            description;
+            date;
+            terminee;
+            constructor(tache) // Nouveau constructeur pour le test
+            {
+                this.id = tache.id;
+                this.description = tache.description;
+                this.date = tache.date;
+                this.terminee = tache.terminee;
+            }
+            // Method pour faire des copie et modifier du coup le constructeur pour qu'il prenne en parametre uniquement la description
+
+
+        }
+        /*-------------CLASS------------*/
+
+        /*-----------VARIABLES----------*/
+        const URL = "http://localhost:9090/api/taches";
+        let listeObjetTache = []; // liste qui contiendra toutes les taches du serveur sous forme d'objet Tache
+        /*-----------VARIABLES----------*/
+
+        /*-----------FUNCTION-----------*/
+        function getListe(listeObjetTache) {
+            fetch(URL, {
+                method: "GET",
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            })
+                .then(response => response.json())
+                .then(function (allTache) {
+                    for (tache of allTache) {
+                        console.log(tache);
+                        let objetTache = new Tache(tache);
+                        if (!isExist(objetTache, tache, listeObjetTache)) {
+                            listeObjetTache.push(objetTache);
+                        }
+                        else {
+                            console.log(`La tache ${objetTache.id} existe deja`)
+                        }
+                    }
+                    lister(listeObjetTache); // Appelle de la fn d'affichage
+                })
+                .catch(erreur => console.log(erreur))
+        }
+
+        function ajouterTache(tache) // le param tache est un objet de type tache
+        {
+            fetch(URL, {
+                method: "POST",
+                body: JSON.stringify(tache),
+                headers: { "Content-type": "application/json; charset=UTF-8" }
+            })
+                .then(response => response.json())
+                .then(json => console.log(json))
+                .catch(err => console.log(err))
+
+        }
+        function isExist(objetTache, tache, listeObjetTache) {
+            for (objetTache of listeObjetTache) {
+                if (objetTache.id === tache.id) {
+                    return true;
+                }
+            }
+            return false
+        }
+
+        function listeTacheOnConsole(listeObjet) {
+            for (tache of listeObjet) {
+                console.log(tache);
+            }
+        }
+
+        /*------------FN AFFICHAGE-----------*/
+        function lister(listeObjetTache) {
+            document.getElementById('TacheAFaire').innerHTML = '';
+            document.getElementById('TacheFaite').innerHTML = '';
+            for (tache of listeObjetTache) {
+                //création des divs
+                // let article = document.createElement('article');
+                // article.className ="col-6 col-md-4";
+                let divCard = document.createElement('div');
+                // change la couleur de la tache suivant si terminée
+                if (tache.terminee == false) {
+                    divCard.className = "card text-dark bg-warning mb-3";
+                } else {
+                    divCard.className = "card text-white bg-success mb-3";
+                }
+
+                divCard.style = "max-width: 18rem";
+                let divId = document.createElement('div');
+                divId.className = "card-header";
+                let divBody = document.createElement('div');
+                divBody.className = "card-body"
+                let divDate = document.createElement('h5');
+                divDate.className = "card-title";
+                let divDescription = document.createElement('div');
+                divDescription.className = "card-text";
+                
+                //btn à cocher pour terminer la tâche
+                let inputFin = document.createElement('input');
+                inputFin.className = "form-check-input";
+                inputFin.type = "checkbox";
+                inputFin.value = "";
+
+                if (tache.terminee == false) {
+                    inputFin.id = "flexCheckDefault";
+                } else {
+                    inputFin.id = "flexCheckChecked";
+                    inputFin.checked = true;
+                }
+                
+                inputFin.style ="float:right"
+
+                if (tache.terminee == false) {
+                    divCard.className = "card text-dark bg-warning mb-3";
+                } else {
+                    divCard.className = "card text-white bg-success mb-3";
+                }
+                // let labelFin = document.createElement('label');   Si on veut ajouter un titre
+                // labelFin.className = "form-check-label";
+
+
+                // affectations des champs
+
+                divId.innerHTML = "Tâche n° " + tache.id;
+                divDescription.innerHTML = tache.description;
+                divDate.innerHTML = tache.date;
+                // divFinish.innerHTML = tache.terminee;
+
+                //Création de la tache
+
+                divId.appendChild(inputFin);
+                divBody.appendChild(divDate);
+                divBody.appendChild(divDescription);
+                divCard.appendChild(divId);
+                
+                divCard.appendChild(divBody);
+                
+                // article.appendChild(divCard);
+
+                if (tache.terminee == false) {
+                    document.getElementById('TacheAFaire').appendChild(divCard);
+                } else {
+                    document.getElementById('TacheFaite').appendChild(divCard);
+                }
+            }
+        }
+        /*------------FN AFFICHAGE-----------*/
+
+        /*------------ON LOAD-----------*/
+        getListe(listeObjetTache);
+/*------------ON LOAD-----------*/
+
+
+        /*-----------FUNCTION-----------*/
+    </script>
+    <!--/////////////////////////// S C R I P T //////////////////////////////*/-->
+</body>
+
+</html>
+
+<style>
+
+</style>
